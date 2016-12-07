@@ -14,6 +14,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -82,12 +83,15 @@ public class CrimeFetcher {
         return new String(getUrlBytes(urlSpec));
     }
 
-    public void fetchCrimes() {
+    public List<Crime> fetchCrimes() {
         //This is the method that will take the original URL and allow
         //us to add any parameters that might be required to it.
         //For the URL's on my server there are no additional parameters
         //needed. However many API's require extra parameters and this
         //is where they add them.
+
+        //Make a new list of crimes that can be returned
+        List<Crime> crimes = new ArrayList<>();
 
         try {
 
@@ -110,6 +114,7 @@ public class CrimeFetcher {
             JSONArray jsonArray = new JSONArray(jsonString);
 
             //Parse the crimes out from the object.
+            parseCrimes(crimes, jsonArray);
 
             Log.i(TAG, "Fetched contents of URL: " + jsonString);
         } catch (JSONException jse) {
@@ -117,6 +122,9 @@ public class CrimeFetcher {
         } catch (IOException ioe) {
             Log.e(TAG, "Failed to load", ioe);
         }
+
+        //return the list of crimes that should now be populated
+        return crimes;
     }
 
     private void parseCrimes(List<Crime> crimes, JSONArray jsonArray)
@@ -138,18 +146,35 @@ public class CrimeFetcher {
             //Get out the title from the JSONObject
             String title = crimeJsonObject.getString("title");
 
+            //Declare a date object to use inside the try/catch
+            Date date;
+
             //Get out the date and try to parse it.
             try {
                 //Declare a date formatter that can be used to parse the date from
                 //a string into an actual date object.
                 DateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
                 //Use the format to parse the string that we get from the JSONObject
-                Date date = format.parse(crimeJsonObject.getString("incident_date"));
+                date = format.parse(crimeJsonObject.getString("incident_date"));
 
             } catch (Exception e) {
-                
+                //This probably isn't the best practice. We would want an error
+                //rather than just using a default date, but this works well for
+                //right now.
+                date = new Date();
             }
 
+            //Evaluate the is_solved value from the JSONObject to see if it is
+            //equal to "1". If the expression is true, then the is_solved of
+            //the crime will be true.
+            boolean is_solved = (crimeJsonObject.getInt("is_solved") == 1);
+
+            //Create a new crime object from the data we have fetched out
+            Crime newCrime = new Crime(uuidForNewCrime, title, date, is_solved);
+
+            //Add the finished crime to the list of crimes that was passed in
+            //to this method
+            crimes.add(newCrime);
         }
     }
 

@@ -43,7 +43,7 @@ public class CrimeLab {
         mContext = context;
 
         //Load the crime list
-        loadCrimeList();
+        //loadCrimeList();
     }
 
     public void addCrime(Crime c) {
@@ -52,6 +52,10 @@ public class CrimeLab {
 
     public List<Crime> getCrimes() {
         return mCrimes;
+    }
+
+    public void setCrimes(List<Crime> crimes) {
+        mCrimes = crimes;
     }
 
     public Crime getCrime(UUID id) {
